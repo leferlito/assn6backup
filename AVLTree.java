@@ -57,13 +57,56 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
 
     @Override
     public SelfBalancingBST<T> insert(T element) {
-        // TODO
+        AVLTree<T> lChild = this._left;
+        AVLTree<T> rChild = this._right;
+
+        if(element.compareTo(this.getValue()) > 0) {
+            this._right = rChild.insert(element);
+        }
+        if(element.compareTo(this.getValue()) < 0) {
+            this._left = lChild.insert(element);
+        }
+        if(element.compareTo(this.getValue()) == 0) {
+            this._right = rChild.insert(element);
+        }
         return null;
     }
 
     @Override
     public SelfBalancingBST<T> remove(T element) {
-        // TODO
+        AVLTree<T> lChild = this._left;
+        AVLTree<T> rChild = this._right;
+        if (this.isEmpty()) {
+            return this;
+        }
+        // search first, then figure out number of children
+        if(element.compareTo(this.getValue()) > 0){
+            this._right = rChild.remove(element);
+        }
+        if(element.compareTo(this.getValue()) < 0){
+            this._left = lChild.remove(element);
+        }
+        if(element.compareTo(this.getValue()) == 0) { // finally found node
+            if (this._left.isEmpty() && this._right.isEmpty()) { // leaf condition
+                return new SelfBalancingBST<>();
+            }
+            if (this._left.isEmpty() ^ this._right.isEmpty()){ // one child condition
+                if (this._left.isEmpty()) {
+                    return this.getRight();
+                }
+                else{
+                    return this.getLeft();
+                }
+            }
+            if (!this._left.isEmpty() && !this._right.isEmpty()) { // 2 children condition. replace with smallest on right
+                AVLTree<T> rightNode = this.getRight();
+                while(!rightNode.getLeft().isEmpty()){
+                    rightNode = rightNode.getLeft();
+                }
+                this._element = rightNode.getElement();
+                this._right = this._right.remove(this._element);
+            }
+        }
         return null;
     }
 
@@ -71,17 +114,18 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
     public T findMin() {
         if (size() == 0) {
             return null;
-            }if (size() == 1){
-                return this._value;
-            }else {
-                AVLTree<T> parent = this;
-                AVLTree<T> lChild = this._left;
-                T returnValue = null;
-                while (lChild._left != null) {
-                    parent = lChild;
-                    lChild = lChild._left;
-                    returnValue = lChild.getValue();
-                return returnValue;
+        }
+        if (size() == 1) {
+            return this.getValue();
+        } else {
+            AVLTree<T> parent = this;
+            AVLTree<T> lChild = this._left;
+            T returnValue = null;
+            while (lChild.getValue() != null) {
+                parent = lChild;
+                lChild = parent._left;
+                returnValue = lChild.getValue();
+            return returnValue;
             }
         }
         return null;
@@ -91,15 +135,16 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
     public T findMax() {
         if (size() == 0) {
             return null;
-        }if (size() == 1){
-            return this._value;
-        }else {
+        }
+        if (size() == 1) {
+            return this.getValue();
+        } else {
             AVLTree<T> parent = this;
             AVLTree<T> rChild = this._right;
             T returnValue = null;
-            while (rChild._right != null) {
+            while (rChild.getValue()!= null) {
                 parent = rChild;
-                rChild = rChild._right;
+                rChild = parent._right;
                 returnValue = rChild.getValue();
             return returnValue;
             }
@@ -109,54 +154,54 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
 
     @Override
     public boolean contains(T element) {
-    	if (size() == 0) {
+        if (size() == 0) {
             return false;
-            }
-        if(size () == 1){
-            if(element.compareTo(this.getValue()) == 0){
+        }
+        if (size() == 1) {
+            if (element.compareTo(this.getValue()) == 0) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
-        } else{
+        } else {
             AVLTree<T> parent = this;
             AVLTree<T> lChild = this._left;
             AVLTree<T> rChild = this._right;
-            while(this.getValue() != null) {
-                if(element.compareTo(parent.getValue()) == 0){
+            while (this.getValue() != null) {
+                if (element.compareTo(parent.getValue()) == 0) {
                     return true;
-                }if(element.compareTo(parent.getValue()) < 0) {
+                }
+                if (element.compareTo(parent.getValue()) < 0) {
                     parent = lChild;
                     lChild = parent._left;
                 }
-                if(element.compareTo(parent.getValue()) > 0){
+                if (element.compareTo(parent.getValue()) > 0) {
                     parent = rChild;
                     rChild = parent._right;
                 }
             }
-        return false;
-    }
-
-    @Override
-    public T getValue() {
-        return _value;
-    }
-
-    @Override
-    public SelfBalancingBST<T> getLeft() {
-        if (isEmpty()) {
-            return null;
-        }
-        return _left;
-    }
-
-    @Override
-    public SelfBalancingBST<T> getRight() {
-        if (isEmpty()) {
-            return null;
+            return false;
         }
 
-         return _right;
-    }
+        @Override
+        public T getValue() {
+            return _value;
+        }
 
-}
+        @Override
+        public SelfBalancingBST<T> getLeft() {
+            if (isEmpty()) {
+                return null;
+            }
+            return _left;
+        }
+
+        @Override
+        public SelfBalancingBST<T> getRight () {
+            if (isEmpty()) {
+                return null;
+            }
+
+            return _right;
+        }
+    }
