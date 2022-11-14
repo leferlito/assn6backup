@@ -25,7 +25,15 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
         // You should implement left rotation and then use this
         // method as needed when fixing imbalances.
         // TODO
-        return null;
+        AVLTree<T> parent = this;
+        AVLTree<T> lChild = this._left;
+        AVLTree<T> rChild = this._right;
+        if(rChild._height - lChild._height >= 2 || rChild._height - lChild._height <= -2){
+            rChild = parent;
+            parent = this._left; // is the order good?
+            return this.rotateLeft(); // recursive
+        }
+        return this;
     }
 
     /**
@@ -34,10 +42,18 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
      */
 
     private AVLTree<T> rotateRight() {
-        // You should implement right rotation and then use this
-        // method as needed when fixing imbalances.
+        // first check H(L) - H(R) >= 2 or <= -2 , work locally then go from the bottom up
+        //
         // TODO
-        return null;
+        AVLTree<T> parent = this;
+        AVLTree<T> lChild = this._left;
+        AVLTree<T> rChild = this._right;
+        if(lChild._height - rChild._height >= 2 || lChild._height - rChild._height <= -2){
+            lChild = parent;
+            parent = this._right; // is the order good?
+            return this.rotateRight(); // recursive
+        }
+        return this;
     }
 
     @Override
