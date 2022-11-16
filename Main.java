@@ -11,7 +11,7 @@ public class Main {
         // the variable avl_bst because the post insertion root that is
         // returned might change because of the insertion
 
-        for (int i=0; i<50; i++) {
+        /*for (int i=0; i<50; i++) {
             avl_bst = avl_bst.insert((int) (Math.random()*100));
         }
 
@@ -23,8 +23,13 @@ public class Main {
 
         for (int i=0; i<50; i++) {
             avl_bst = avl_bst.insert(i);
-        }
+        }*/
+        avl_bst = avl_bst.insert(20);
+        avl_bst = avl_bst.insert(15);
+        avl_bst = avl_bst.insert(5);
 
-        System.out.println(avl_bst.height());
+        //System.out.println(avl_bst.height());
+        System.out.println(avl_bst.remove(15));
+        avl_bst.remove(5);
     }
 }
