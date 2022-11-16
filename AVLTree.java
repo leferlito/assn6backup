@@ -22,18 +22,17 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
      */
 
     private AVLTree<T> rotateLeft() {
-        // You should implement left rotation and then use this
-        // method as needed when fixing imbalances.
-        // TODO
-        AVLTree<T> parent = this;
-        AVLTree<T> lChild = this._left;
+        AVLTree<T> parent = this; // old root
         AVLTree<T> rChild = this._right;
-        if(rChild._height - lChild._height >= 2 || rChild._height - lChild._height <= -2){
-            rChild = parent;
-            parent = this._left; // is the order good?
-            return this.rotateLeft(); // recursive
-        }
-        return this;
+        AVLTree<T> baby = rChild._left;
+        rChild._left = parent; // new root
+        parent._right = baby;
+        // update the height
+        parent._height = Math.max(parent._left._height, parent._right._height) + 1;
+        parent._size = parent._left._size + parent._right._size + 1;
+        rChild._height = Math.max(rChild._left._height, rChild._right._height) + 1;
+        rChild._size = rChild._left._size + rChild._right._size + 1;
+        return rChild;
     }
 
     /**
@@ -42,18 +41,17 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
      */
 
     private AVLTree<T> rotateRight() {
-        // first check H(L) - H(R) >= 2 or <= -2 , work locally then go from the bottom up
-        //
-        // TODO
-        AVLTree<T> parent = this;
+        AVLTree<T> parent = this; // old root
         AVLTree<T> lChild = this._left;
-        AVLTree<T> rChild = this._right;
-        if(lChild._height - rChild._height >= 2 || lChild._height - rChild._height <= -2){
-            lChild = parent;
-            parent = this._right; // is the order good?
-            return this.rotateRight(); // recursive
-        }
-        return this;
+        AVLTree<T> baby = lChild._right;
+        lChild._right = parent; // new root
+        parent._left = baby;
+        // update the height
+        parent._height = Math.max(parent._left._height, parent._right._height) + 1;
+        parent._size = parent._left._size + parent._right._size + 1;
+        lChild._height = Math.max(lChild._left._height, lChild._right._height) + 1;
+        lChild._size = lChild._left._size + lChild._right._size + 1;
+        return lChild;
     }
 
     @Override
@@ -73,61 +71,84 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
 
     @Override
     public SelfBalancingBST<T> insert(T element) {
+        if (this.size() == 0) {
+            this._value = element;
+            this._left = new AVLTree<>();
+            this._right = new AVLTree<>();
+            this._height += 1;
+            this._size += 1;
+            return this;
+        }
+        AVLTree<T> parent = this;
         AVLTree<T> lChild = this._left;
         AVLTree<T> rChild = this._right;
+        if (element.compareTo(parent.getValue()) > 0) {
+            this._right = (AVLTree<T>) rChild.insert(element);
+            } else if(element.compareTo(parent.getValue()) < 0) {
+                this._left = (AVLTree<T>) lChild.insert(element);
+                } else {
+                    this._right = (AVLTree<T>) rChild.insert(element);
+                }
+        //Change the height
+        this._height = Math.max(this._left._height, this._right._height) + 1;
+        this._size = this._left._size + this._right._size + 1;
 
-        if(element.compareTo(this.getValue()) > 0) {
-            this._right = rChild.insert(element);
+        //do the rotation
+        if (this.getBalance() >= 2){
+            this.rotateRight();
         }
-        if(element.compareTo(this.getValue()) < 0) {
-            this._left = lChild.insert(element);
+        if (this.getBalance() <= -2){
+            this.rotateLeft();
         }
-        if(element.compareTo(this.getValue()) == 0) {
-            this._right = rChild.insert(element);
-        }
-        return null;
+        return this.insert(element);
     }
 
     @Override
     public SelfBalancingBST<T> remove(T element) {
-        AVLTree<T> lChild = this._left;
-        AVLTree<T> rChild = this._right;
         if (this.isEmpty()) {
             return this;
         }
-        // search first, then figure out number of children
-        if(element.compareTo(this.getValue()) > 0){
-            this._right = rChild.remove(element);
-        }
-        if(element.compareTo(this.getValue()) < 0){
-            this._left = lChild.remove(element);
-        }
-        if(element.compareTo(this.getValue()) == 0) { // finally found node
-            if (this._left.isEmpty() && this._right.isEmpty()) { // leaf condition
-                return new SelfBalancingBST<>();
-            }
-            if (this._left.isEmpty() ^ this._right.isEmpty()){ // one child condition
-                if (this._left.isEmpty()) {
+        SelfBalancingBST<T> parent = this;
+        SelfBalancingBST<T> lChild = this._left;
+        SelfBalancingBST<T>  rChild = this._right;
+
+        if (this.contains(element)){ // searching for node
+            if (this._left.isEmpty() ^ this._right.isEmpty()) { // one child condition
+                if (lChild.isEmpty()) {
                     return this.getRight();
-                }
-                else{
+                } else {
                     return this.getLeft();
                 }
             }
             if (!this._left.isEmpty() && !this._right.isEmpty()) { // 2 children condition. replace with smallest on right
-                AVLTree<T> rightNode = this.getRight();
-                while(!rightNode.getLeft().isEmpty()){
+                SelfBalancingBST<T> rightNode = this.getRight();
+                while (!rightNode.getLeft().isEmpty()) {
                     rightNode = rightNode.getLeft();
                 }
-                this._element = rightNode.getElement();
-                this._right = this._right.remove(this._element);
+                this._value = rightNode.getValue();
+                rightNode = rightNode.remove(this.getValue());
             }
         }
-        return null;
+        // do the rotation
+        if (this.getBalance() >= 2){
+            if(this._left.getBalance() <= -1) {
+                this._left = this._left.rotateLeft();
+            }
+            return this.rotateRight();
+        }
+
+        if (this.getBalance() <= -2){
+            if(this._right.getBalance() >= 1) {
+                this._right = this._right.rotateRight();
+            }
+            return this.rotateLeft();
+        }
+    return this;
     }
 
     @Override
     public T findMin() {
+        T returnValue = null;
         if (size() == 0) {
             return null;
         }
@@ -136,19 +157,18 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
         } else {
             AVLTree<T> parent = this;
             AVLTree<T> lChild = this._left;
-            T returnValue = null;
-            while (lChild.getValue() != null) {
+            while (!lChild.isEmpty()) {
                 parent = lChild;
                 lChild = parent._left;
                 returnValue = lChild.getValue();
-            return returnValue;
             }
         }
-        return null;
+        return returnValue;
     }
 
     @Override
     public T findMax() {
+        T returnValue = null;
         if (size() == 0) {
             return null;
         }
@@ -157,15 +177,13 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
         } else {
             AVLTree<T> parent = this;
             AVLTree<T> rChild = this._right;
-            T returnValue = null;
-            while (rChild.getValue()!= null) {
+            while (rChild.getValue() != null) {
                 parent = rChild;
                 rChild = parent._right;
                 returnValue = rChild.getValue();
-            return returnValue;
             }
         }
-        return null;
+        return returnValue;
     }
 
     @Override
@@ -183,7 +201,7 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
             AVLTree<T> parent = this;
             AVLTree<T> lChild = this._left;
             AVLTree<T> rChild = this._right;
-            while (this.getValue() != null) {
+            while (!parent.isEmpty()) {
                 if (element.compareTo(parent.getValue()) == 0) {
                     return true;
                 }
@@ -198,26 +216,33 @@ public class AVLTree<T extends Comparable<T>> implements SelfBalancingBST<T> {
             }
             return false;
         }
-
-        @Override
-        public T getValue() {
-            return _value;
-        }
-
-        @Override
-        public SelfBalancingBST<T> getLeft() {
-            if (isEmpty()) {
-                return null;
-            }
-            return _left;
-        }
-
-        @Override
-        public SelfBalancingBST<T> getRight () {
-            if (isEmpty()) {
-                return null;
-            }
-
-            return _right;
-        }
     }
+
+    @Override
+    public T getValue() {
+        return _value;
+    }
+
+    @Override
+    public SelfBalancingBST<T> getLeft() {
+        if (isEmpty()) {
+            return null;
+        }
+        return _left;
+    }
+
+    @Override
+    public SelfBalancingBST<T> getRight() {
+        if (isEmpty()) {
+            return null;
+        }
+
+        return _right;
+    }
+    int getBalance() {
+        if (this.isEmpty()) {
+            return 0;
+        }
+        return this._left.height() - this._right.height();
+    }
+}
